@@ -61,4 +61,4 @@ UPDATE uniqueid_exempt SET reason = CONCAT('uniqueid_exempt.reason  ', user_id);
 UPDATE vm_exempt SET reason = CONCAT('vm_exempt.reason  ', idUser);
 
 # Correct checksum of migration
-UPDATE `faf`.`schema_version` SET `checksum`='-427051799' WHERE `installed_rank`='18';
+UPDATE `schema_version` SET `checksum`='-427051799' WHERE `installed_rank`='18';
