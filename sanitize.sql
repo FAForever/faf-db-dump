@@ -91,6 +91,11 @@ WHERE gameId NOT IN
       (SELECT id
        FROM tmp_games);
 
+DELETE FROM game_stats
+WHERE id NOT IN
+      (SELECT id
+       FROM tmp_games);
+
 DROP TABLE tmp_games;
 
 -- **********************************************
