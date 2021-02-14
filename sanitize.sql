@@ -62,8 +62,8 @@ ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';
 -- Collect random games to keep
 CREATE TABLE tmp_games
 (
-    id INT NOT NULL,
-    PRIMARY KEY (id)
+    id INT UNSIGNED PRIMARY KEY,
+    FOREIGN KEY `games` (id) REFERENCES game_stats (id)
 )
 SELECT id FROM game_stats
 ORDER BY RAND() LIMIT 10000;
