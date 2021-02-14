@@ -15,7 +15,6 @@ DELETE FROM oauth_tokens;
 DELETE FROM friends_and_foes;
 DELETE FROM teamkills;
 DELETE FROM user_notes;
-DELETE FROM email_domain_blacklist;
 DELETE FROM reported_user;
 DELETE FROM ban;
 DELETE FROM moderation_report;
@@ -24,7 +23,6 @@ DELETE FROM uniqueid_exempt;
 DELETE FROM vm_exempt;
 DELETE FROM voting_answer;
 DELETE FROM vote;
-
 
 -- ******************************
 -- Reset user passwords to banana
@@ -57,8 +55,6 @@ ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';
 -- Reduce dataset of games to a limited size
 -- *****************************************
 
-
-
 -- Collect random games to keep
 CREATE TABLE tmp_games
 (
@@ -67,6 +63,8 @@ CREATE TABLE tmp_games
 )
 SELECT id FROM game_stats
 ORDER BY RAND() LIMIT 10000;
+
+-- Clean their references
 
 DELETE FROM coop_leaderboard
 WHERE gameuid NOT IN
@@ -124,8 +122,61 @@ DROP TEMPORARY table to_delete_game_stats;
 
 DROP TABLE tmp_games;
 
--- **********************************************
--- Optimize dump size by throwing away large data
--- **********************************************
-TRUNCATE TABLE player_achievements;
-TRUNCATE TABLE player_events;
+-- *******************************************************
+-- Optimize dump size by keeping small sizes of large data
+-- *******************************************************
+DELETE FROM email_domain_blacklist WHERE RAND() <= 0.01;
+DELETE FROM uniqueid WHERE RAND() <= 0.01;
+
+CREATE TEMPORARY TABLE keep_event
+SELECT event_id FROM player_events LIMIT 1;
+
+DELETE player_events
+FROM player_events INNER JOIN keep_event ON player_events.event_id = keep_event.event_id
+WHERE RAND() <= 0.001;
+
+DROP TEMPORARY TABLE keep_event;
+
+CREATE TEMPORARY TABLE keep_achievement
+SELECT id FROM achievement_definitions LIMIT 1;
+
+
+CREATE TEMPORARY TABLE keep_achievement
+SELECT id FROM achievement_definitions LIMIT 1;
+
+DELETE player_achievements
+FROM player_achievements INNER JOIN keep_achievement ON player_achievements.achievement_id = keep_achievement.id
+WHERE RAND() <= 0.001;
+
+DROP TEMPORARY TABLE keep_achievement;
+
+
+-- *******************************************
+-- Reduce dataset of players to a limited size
+-- *******************************************
+
+CREATE TEMPORARY TABLE keep_players
+(
+    id mediumint UNSIGNED PRIMARY KEY
+)
+SELECT DISTINCT host as id from game_stats UNION
+SELECT DISTINCT playerId as id from game_player_stats UNION
+SELECT DISTINCT uploader as id FROM `mod` WHERE uploader IS NOT NULL UNION
+SELECT DISTINCT author as id FROM map where author IS NOT NULL UNION
+SELECT DISTINCT user_id as id FROM map_version_review UNION
+SELECT DISTINCT user_id as id FROM mod_version_review UNION
+SELECT DISTINCT founder_id as id FROM clan UNION
+SELECT DISTINCT player_id as id FROM clan_membership UNION
+SELECT DISTINCT idUser FROM avatars UNION
+SELECT DISTINCT player_id as id FROM player_achievements UNION
+SELECT DISTINCT player_id as id FROM player_events
+;
+
+DELETE FROM leaderboard_rating
+WHERE login_id NOT IN (SELECT id FROM keep_players);
+OPTIMIZE TABLE leaderboard_rating;
+
+DELETE FROM login
+WHERE id NOT IN (SELECT id FROM keep_players);
+
+DROP TEMPORARY TABLE keep_players;
