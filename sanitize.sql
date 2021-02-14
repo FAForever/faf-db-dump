@@ -126,7 +126,9 @@ DROP TABLE tmp_games;
 -- Optimize dump size by keeping small sizes of large data
 -- *******************************************************
 DELETE FROM email_domain_blacklist WHERE RAND() <= 0.01;
+OPTIMIZE TABLE email_domain_blacklist;
 DELETE FROM uniqueid WHERE RAND() <= 0.01;
+OPTIMIZE TABLE uniqueid;
 
 CREATE TEMPORARY TABLE keep_event
 SELECT event_id FROM player_events LIMIT 1;
@@ -134,6 +136,7 @@ SELECT event_id FROM player_events LIMIT 1;
 DELETE player_events
 FROM player_events INNER JOIN keep_event ON player_events.event_id = keep_event.event_id
 WHERE RAND() <= 0.001;
+OPTIMIZE TABLE player_events;
 
 DROP TEMPORARY TABLE keep_event;
 
@@ -147,6 +150,7 @@ SELECT id FROM achievement_definitions LIMIT 1;
 DELETE player_achievements
 FROM player_achievements INNER JOIN keep_achievement ON player_achievements.achievement_id = keep_achievement.id
 WHERE RAND() <= 0.001;
+OPTIMIZE TABLE player_achievements;
 
 DROP TEMPORARY TABLE keep_achievement;
 
