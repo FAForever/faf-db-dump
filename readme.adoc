@@ -1,0 +1,6 @@
+# FAForever database dump
+
+In this repository you find an anonymized excerpt of the FAF production database (dump.sql) and scripts to generate
+it from a copy (!) of the production database (sanitize.sql).
+
+It's main use is to verify database migrations against at least partially real world data.
