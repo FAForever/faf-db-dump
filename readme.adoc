@@ -4,3 +4,7 @@ In this repository you find an anonymized excerpt of the FAF production database
 it from a copy (!) of the production database (sanitize.sql).
 
 It's main use is to verify database migrations against at least partially real world data.
+
+## Sanitize
+
+If you run a sanitize query, please note the loop inside the SQL! Manual work is required!

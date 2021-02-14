@@ -68,33 +68,59 @@ CREATE TABLE tmp_games
 SELECT id FROM game_stats
 ORDER BY RAND() LIMIT 10000;
 
+DELETE FROM coop_leaderboard
+WHERE gameuid NOT IN
+      (SELECT id FROM tmp_games);
+OPTIMIZE TABLE coop_leaderboard;
+
 -- Delete all game-related records we don't need
 DELETE FROM matchmaker_queue_game
 WHERE game_stats_id NOT IN
       (SELECT id FROM tmp_games);
+OPTIMIZE TABLE matchmaker_queue_game;
 
 DELETE FROM game_review
 WHERE id NOT IN
       (SELECT id FROM tmp_games);
+OPTIMIZE TABLE game_review;
 
 DELETE FROM game_reviews_summary
 WHERE game_id NOT IN
       (SELECT id FROM tmp_games);
+OPTIMIZE TABLE game_reviews_summary;
 
 DELETE FROM leaderboard_rating_journal
 WHERE game_player_stats_id NOT IN
       (SELECT gps.id FROM tmp_games
                               INNER JOIN game_player_stats gps ON tmp_games.id = gps.gameId);
+OPTIMIZE TABLE leaderboard_rating_journal;
 
 DELETE FROM game_player_stats
 WHERE gameId NOT IN
       (SELECT id
        FROM tmp_games);
+OPTIMIZE TABLE game_player_stats;
 
-DELETE FROM game_stats
-WHERE id NOT IN
-      (SELECT id
-       FROM tmp_games);
+
+-- PROBLEM: You don't want to delete all games for 5 hours and then fail because of a new
+-- foreign key constraint! Also this causes massive overhead due to InnoDB consistency logs.
+-- SOLUTION: Iterate the loop n-times for n-million game stats
+SELECT count(*) / 1000000 as n FROM game_stats;
+
+-- ** LOOP BEGIN **
+CREATE TEMPORARY TABLE IF NOT EXISTS to_delete_game_stats(
+    id int unsigned PRIMARY KEY
+)
+SELECT id from game_stats
+where id not in (SELECT gameId from tmp_games)
+    limit 1000000;
+
+DELETE game_stats
+FROM game_stats
+WHERE id in (SELECT id from to_delete_game_stats);
+
+DROP TEMPORARY table to_delete_game_stats;
+-- ** LOOP END **
 
 DROP TABLE tmp_games;
 
