@@ -56,7 +56,7 @@ ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';
 -- *****************************************
 
 -- Collect random games to keep
-CREATE TABLE tmp_games
+CREATE TABLE keep_games
 (
     id INT UNSIGNED PRIMARY KEY,
     FOREIGN KEY `games` (id) REFERENCES game_stats (id)
@@ -68,35 +68,34 @@ ORDER BY RAND() LIMIT 10000;
 
 DELETE FROM coop_leaderboard
 WHERE gameuid NOT IN
-      (SELECT id FROM tmp_games);
+      (SELECT id FROM keep_games);
 OPTIMIZE TABLE coop_leaderboard;
 
 -- Delete all game-related records we don't need
 DELETE FROM matchmaker_queue_game
 WHERE game_stats_id NOT IN
-      (SELECT id FROM tmp_games);
+      (SELECT id FROM keep_games);
 OPTIMIZE TABLE matchmaker_queue_game;
 
 DELETE FROM game_review
-WHERE id NOT IN
-      (SELECT id FROM tmp_games);
+WHERE game_id NOT IN
+      (SELECT id FROM keep_games);
 OPTIMIZE TABLE game_review;
 
 DELETE FROM game_reviews_summary
 WHERE game_id NOT IN
-      (SELECT id FROM tmp_games);
+      (SELECT id FROM keep_games);
 OPTIMIZE TABLE game_reviews_summary;
 
 DELETE FROM leaderboard_rating_journal
 WHERE game_player_stats_id NOT IN
-      (SELECT gps.id FROM tmp_games
-                              INNER JOIN game_player_stats gps ON tmp_games.id = gps.gameId);
+      (SELECT gps.id FROM keep_games
+                              INNER JOIN game_player_stats gps ON keep_games.id = gps.gameId);
 OPTIMIZE TABLE leaderboard_rating_journal;
 
 DELETE FROM game_player_stats
 WHERE gameId NOT IN
-      (SELECT id
-       FROM tmp_games);
+      (SELECT id FROM keep_games);
 OPTIMIZE TABLE game_player_stats;
 
 
@@ -110,7 +109,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS to_delete_game_stats(
     id int unsigned PRIMARY KEY
 )
 SELECT id from game_stats
-where id not in (SELECT gameId from tmp_games)
+where id not in (SELECT id from keep_games)
     limit 1000000;
 
 DELETE game_stats
@@ -120,14 +119,14 @@ WHERE id in (SELECT id from to_delete_game_stats);
 DROP TEMPORARY table to_delete_game_stats;
 -- ** LOOP END **
 
-DROP TABLE tmp_games;
+DROP TABLE keep_games;
 
 -- *******************************************************
 -- Optimize dump size by keeping small sizes of large data
 -- *******************************************************
-DELETE FROM email_domain_blacklist WHERE RAND() <= 0.01;
+DELETE FROM email_domain_blacklist WHERE RAND() <= 0.001;
 OPTIMIZE TABLE email_domain_blacklist;
-DELETE FROM uniqueid WHERE RAND() <= 0.01;
+DELETE FROM uniqueid WHERE RAND() <= 0.001;
 OPTIMIZE TABLE uniqueid;
 
 CREATE TEMPORARY TABLE keep_event
@@ -139,10 +138,6 @@ WHERE RAND() <= 0.001;
 OPTIMIZE TABLE player_events;
 
 DROP TEMPORARY TABLE keep_event;
-
-CREATE TEMPORARY TABLE keep_achievement
-SELECT id FROM achievement_definitions LIMIT 1;
-
 
 CREATE TEMPORARY TABLE keep_achievement
 SELECT id FROM achievement_definitions LIMIT 1;
