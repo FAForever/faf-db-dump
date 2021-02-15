@@ -124,9 +124,9 @@ DROP TABLE keep_games;
 -- *******************************************************
 -- Optimize dump size by keeping small sizes of large data
 -- *******************************************************
-DELETE FROM email_domain_blacklist WHERE RAND() <= 0.001;
+DELETE FROM email_domain_blacklist WHERE RAND() >= 0.001;
 OPTIMIZE TABLE email_domain_blacklist;
-DELETE FROM uniqueid WHERE RAND() <= 0.001;
+DELETE FROM uniqueid WHERE RAND() >= 0.001;
 OPTIMIZE TABLE uniqueid;
 
 CREATE TEMPORARY TABLE keep_event
@@ -134,7 +134,7 @@ SELECT event_id FROM player_events LIMIT 1;
 
 DELETE FROM player_events WHERE event_id NOT IN (SELECT event_id FROM keep_event);
 
-DELETE player_events WHERE RAND() <= 0.001;
+DELETE FROM player_events WHERE RAND() >= 0.001;
 OPTIMIZE TABLE player_events;
 
 DROP TEMPORARY TABLE keep_event;
@@ -142,9 +142,9 @@ DROP TEMPORARY TABLE keep_event;
 CREATE TEMPORARY TABLE keep_achievement
 SELECT id FROM achievement_definitions LIMIT 1;
 
-DELETE FROM player_achievements achievement_id NOT IN (SELECT id FROM keep_achievement);
+DELETE FROM player_achievements WHERE achievement_id NOT IN (SELECT id FROM keep_achievement);
 
-DELETE FROM player_achievements WHERE RAND() <= 0.001;
+DELETE FROM player_achievements WHERE RAND() >= 0.001;
 OPTIMIZE TABLE player_achievements;
 
 DROP TEMPORARY TABLE keep_achievement;
