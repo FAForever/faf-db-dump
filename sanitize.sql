@@ -2,6 +2,7 @@
 -- Delete secret data & anonymize personal data
 -- ********************************************
 UPDATE login SET
+                 login = concat('User_', id),
                  email = concat(concat('user', id), '@faforever-test.com'),
                  password = sha2('foo', 256),
                  ip = concat('10.0.0.', FLOOR(RAND()*254)),
