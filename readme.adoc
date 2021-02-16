@@ -8,3 +8,14 @@ It's main use is to verify database migrations against at least partially real w
 ## Sanitize
 
 If you run a sanitize query, please note the loop inside the SQL! Manual work is required!
+
+## Dump
+
+If you imported the production database using a faf-db from faf-stack you may run
+
+`docker exec -i -u root faf-db mysqldump -u root -p --single-transaction faf_lobby > dump.sql`
+
+Afterwards you need to edit the dump.sql:
+
+* replace faf_lobby with faf
+* replace all `SQL SECURITY DEFINER` to +DEFINER=`root`@`%`+ (otherwise Schemaspy will break)
