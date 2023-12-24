@@ -12,6 +12,7 @@ UPDATE name_history SET previous_name = CONCAT('name_', user_id);
 UPDATE oauth_clients SET client_secret = concat('{noop}', name)
     WHERE client_type = 'confidential';
 UPDATE jwt_users SET public_key = CONCAT('ssh-rsa <key>', id);
+UPDATE service_links set service_id = id;
 DELETE FROM oauth_tokens;
 DELETE FROM friends_and_foes;
 DELETE FROM teamkills;
